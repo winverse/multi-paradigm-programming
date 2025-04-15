@@ -44,3 +44,31 @@ export function map<A, B>(
     },
   };
 }
+
+export function forEach<A>(f: (a: A) => void, iterable: Iterable<A>) {
+  const iter = iterable[Symbol.iterator]();
+  while (true) {
+    const { value, done } = iter.next();
+    if (done) break;
+    f(value);
+  }
+}
+
+export function filter<A>(
+  f: (a: A) => boolean,
+  iterable: Iterable<A>,
+): IterableIterator<A> {
+  const iter = iterable[Symbol.iterator]();
+  return {
+    next() {
+      while (true) {
+        const { value, done } = iter.next();
+        if (done) return { done: true, value };
+        if (f(value)) return { done, value };
+      }
+    },
+    [Symbol.iterator]() {
+      return this;
+    },
+  };
+}

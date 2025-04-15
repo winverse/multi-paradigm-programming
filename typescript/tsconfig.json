@@ -17,7 +17,6 @@
     "noImplicitAny": false,
     "verbatimModuleSyntax": true,
     "experimentalDecorators": true,
-    "noEmit": true,
-    "skipLibCheck": true
+    "noEmit": true
   },
 }
