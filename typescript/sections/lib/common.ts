@@ -112,6 +112,13 @@ export function reduce<A, Result>(
   }
 }
 
+function* take<A>(limit: number, iterable: Iterable<A>): IterableIterator<A> {
+  for (const a of iterable) {
+    yield a;
+    if (--limit === 0) break;
+  }
+}
+
 export class FxIterable<A> {
   constructor(private iterable: Iterable<A>) {}
 
@@ -148,4 +155,12 @@ export class FxIterable<A> {
   chain<B>(f: (iterable: this) => Iterable<B>): FxIterable<B> {
     return new FxIterable(f(this));
   }
+
+  take<A>(limit: number) {
+    return new FxIterable(take(limit, this));
+  }
+}
+
+export function fx<A>(iterable: Iterable<A>) {
+  return new FxIterable(iterable);
 }
