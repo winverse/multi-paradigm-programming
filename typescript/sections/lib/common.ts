@@ -72,3 +72,80 @@ export function filter<A>(
     },
   };
 }
+
+function baseReduce<A, Result>(
+  f: (a: Result, b: A) => Result,
+  acc: Result,
+  iterator: Iterator<A>,
+): Result {
+  while (true) {
+    const { value, done } = iterator.next();
+    if (done) break;
+    acc = f(acc, value);
+  }
+  return acc;
+}
+
+export function reduce<A, Result>(
+  f: (a: A, b: A) => Result,
+  iterable: Iterable<A>,
+): Result;
+export function reduce<A, Result>(
+  f: (a: Result, b: A) => Result,
+  acc: Result,
+  iterable: Iterable<A>,
+): Result;
+export function reduce<A, Result>(
+  f: (a: Result | A, b: A) => Result,
+  accOrIterable: Result | Iterable<A>,
+  iterable?: Iterable<A>,
+): Result {
+  if (iterable === undefined) {
+    iterable = accOrIterable as Iterable<A>;
+    const iter = iterable[Symbol.iterator]();
+    const { value: acc, done } = iter.next();
+    if (done) throw new TypeError("Empty iterable");
+    return baseReduce(f, acc, iter) as Result;
+  } else {
+    const acc = accOrIterable as Result;
+    return baseReduce(f, acc, iterable[Symbol.iterator]());
+  }
+}
+
+export class FxIterable<A> {
+  constructor(private iterable: Iterable<A>) {}
+
+  [Symbol.iterator]() {
+    return this.iterable[Symbol.iterator]();
+  }
+
+  map<B>(f: (a: A) => B): FxIterable<B> {
+    return new FxIterable(map(f, this));
+  }
+
+  filter(f: (a: A) => boolean): FxIterable<A> {
+    return new FxIterable<A>(filter(f, this));
+  }
+
+  forEach(f: (a: A) => void): void {
+    return forEach(f, this);
+  }
+
+  reduce<Result>(f: (a: A, b: A) => Result): Result;
+  reduce<Result>(f: (acc: Result, x: A) => Result, acc: Result): Result;
+  reduce<Result>(f: (acc: A | Result, x: A) => Result, acc?: Result): Result {
+    return acc === undefined ? reduce(f, this) : reduce(f, acc, this);
+  }
+
+  toArray() {
+    return [...this.iterable];
+  }
+
+  to<R>(convert: (iterable: this) => R): R {
+    return convert(this);
+  }
+
+  chain<B>(f: (iterable: this) => Iterable<B>): FxIterable<B> {
+    return new FxIterable(f(this));
+  }
+}

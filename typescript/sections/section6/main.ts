@@ -30,7 +30,7 @@ function lesson4() {
   function reduce<A, Result>(
     f: (a: A, b: A) => Result,
     iterable: Iterable<A>,
-  ): A;
+  ): Result;
   function reduce<A, Result>(
     f: (a: Result, b: A) => Result,
     acc: Result,
