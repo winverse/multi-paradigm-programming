@@ -159,8 +159,48 @@ export class FxIterable<A> {
   take<A>(limit: number) {
     return new FxIterable(take(limit, this));
   }
+
+  reject(f: (a: A) => boolean) {
+    return this.filter(a => !f(a));
+  }
+
+  chunk(size: number) {
+    return fx(chunk(size, this));
+  }
 }
 
 export function fx<A>(iterable: Iterable<A>) {
   return new FxIterable(iterable);
+}
+
+export function head<A>(iterable: Iterable<A>): A | undefined {
+  const [first] = iterable;
+  return first;
+}
+export function find<A>(
+  f: (a: A) => boolean,
+  iterable: Iterable<A>,
+): A | undefined {
+  return head(filter(f, iterable));
+}
+
+function* chunk<T>(size: number, iterable: Iterable<T>): IterableIterator<T[]> {
+  const iterator = iterable[Symbol.iterator]();
+  while (true) {
+    const arr = [
+      ...take(size, {
+        [Symbol.iterator]() {
+          return iterator;
+        },
+      }),
+    ];
+    if (arr.length) yield arr;
+    if (arr.length < size) break;
+  }
+}
+
+function* concat<T>(...iterables: Iterable<T>[]): IterableIterator<T> {
+  for (const iterable of iterables) {
+    yield* iterable;
+  }
 }
